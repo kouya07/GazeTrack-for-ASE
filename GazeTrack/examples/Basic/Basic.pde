@@ -1,9 +1,14 @@
 import gazetrack.*;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 GazeTrack gazeTrack;
+DateTimeFormatter dtf;
+LocalDateTime ldt;
 
 float slide = 0;
-  
+String localStr;
+
 PrintWriter file;
 
 void setup(){
@@ -20,45 +25,56 @@ void setup(){
   // different socket port (e.g., 5656), use this instead:
   // gazeTrack = new GazeTrack(this, "5656");
   
-  file = createWriter("test.csv");
+  ldt = LocalDateTime.now();
+  dtf = DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm");
+  localStr = dtf.format(ldt);
   
-  //float slide = 526.26; // left hand
-  slide = -526.26; // right hand
+  file = createWriter("Data" + "/" + localStr + ".csv");
+  file.println("Data,GazeX,GazeY,Zone");
+  
+  dtf = DateTimeFormatter.ofPattern("yyyy_MM_dd HH:mm:ss.SSS");
+  localStr = dtf.format(ldt);
+  
+  //float slide = 526.26; // forleft hand
+  slide = -526.26; // for right hand
 }
 
 void draw(){
   background(255);
-  //line(0, height/2, width, height/2);
-  line(width/2, 0, width/2, height);
+  //line(width/2, 0, width/2, height);
   
-  line(-526.26 + width/2, 0, -526.26 + width/2, height);
-  //line(526.26, -height, 526.26, height);
+  //line(526.26, -height, 526.26, height); //for left hand
+  //line(-526.26 + width/2, 0, -526.26 + width/2, height); //for right hand
+  
+  //rect(168, 212, 2400, 1400);
+  //line(568, 212, 568, 1612);
+  
+  ldt = LocalDateTime.now();
+  localStr = dtf.format(ldt);
   
   if (gazeTrack.gazePresent()){
-    float gazeX = gazeTrack.getGazeX() + slide;
+    float GazeX = gazeTrack.getGazeX() + slide;
    
-    ellipse(gazeX, gazeTrack.getGazeY(), 100, 100);
+    //ellipse(GazeX, gazeTrack.getGazeY(), 100, 100);
     
-    // Print the tracker's timestamp for the gaze cursor above
-    println("Latest gaze data at: " + gazeTrack.getTimestamp() + " " + "Time: " + year() + "/" + month() + "/" + day() + " " + hour() + ":" + minute() + ":" + second() + "." + millis() + " " 
-            + "GazeX: " + gazeX/2 + " GazeY: " + gazeTrack.getGazeY()/2);
+    GazeX = GazeX/2;
+    float GazeY = gazeTrack.getGazeY()/2;
+    
+    println("Time: " + localStr + " " + "GazeX: " + GazeX + " GazeY: " + GazeY);
 
-    file.print(year() + "/" + month() + "/" + day() + " " + hour() + ":" + minute() + ":" + second() + "." + millis());
-    file.print(",");
-    file.print(gazeX / 2);
-    file.print(",");
-    file.print(gazeTrack.getGazeY() / 2);
+    file.print(localStr + "," + GazeX + "," + GazeY);
     
-    if(84 <= gazeX/2 && gazeX/2 <= 284 && 106 <= gazeTrack.getGazeY()/2 && gazeTrack.getGazeY()/2 <= 806){
-      file.print(",");
-      file.println("A");
-    } else if(284 <= gazeX/2 && gazeX/2 <= 1284 && 106 <= gazeTrack.getGazeY()/2 && gazeTrack.getGazeY()/2 <= 806){
-      file.print(",");
-      file.println("B");
+    // for Surface Pro 4
+    if(84 <= GazeX && GazeX <= 284 && 106 <= GazeY && GazeY <= 806){
+      file.println(",A");
+    } else if(284 <= GazeX && GazeX <= 1284 && 106 <= GazeY && GazeY <= 806){
+      file.println(",B");
     } else {
       file.println();
     }
     
+  } else {
+    file.println(localStr + ",Not Present");
   }
   
   if(int(key) == 10){
@@ -66,5 +82,5 @@ void draw(){
     file.close();
     exit();
   }
-    
+  
 }
